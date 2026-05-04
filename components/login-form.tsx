@@ -13,13 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { login } from "@/hooks/auth";
 
-interface LoginFormProps {
-  onLoginSuccess: (credentials: { email: string; password: string }) => void;
-}
-
-export function LoginForm({ onLoginSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState("");
+export function LoginForm() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,31 +24,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    login({ username, password });
     setIsLoading(true);
-
-    // Simulate API call
-    try {
-      if (!email || !password) {
-        throw new Error("Por favor completa todos los campos");
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        throw new Error("Por favor ingresa un email válido");
-      }
-
-      if (password.length < 6) {
-        throw new Error("La contraseña debe tener al menos 6 caracteres");
-      }
-
-      // Simulate delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      onLoginSuccess({ email, password });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -73,13 +47,13 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
               />
             </div>
@@ -99,12 +73,6 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
-
-            <div className="text-center text-sm text-muted-foreground">
-              <p>
-                Demo: puedes usar cualquier email y contraseña de 6+ caracteres
-              </p>
-            </div>
           </form>
         </CardContent>
       </Card>
