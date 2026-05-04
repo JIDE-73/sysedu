@@ -1,7 +1,21 @@
 // Import toast from sonner for error handling
 import { toast } from "sonner";
 
-const baseUrl = `${process.env.NEXT_PUBLIC_URL}`;
+const baseUrl = `${process.env.NEXT_PUBLIC_BU}`;
+
+const setStorage = (key: string, value: any) => {
+  localStorage.setItem(key, JSON.stringify(value));
+};
+
+const getStorage = (key: string) => {
+  const item = localStorage.getItem(key);
+  if (!item) return null;
+  try {
+    return JSON.parse(item);
+  } catch {
+    return null;
+  }
+};
 
 const request = async (url: string, method: string, body?: any) => {
   const hasJsonBody = body !== undefined && method !== "GET";
@@ -11,10 +25,10 @@ const request = async (url: string, method: string, body?: any) => {
     body: hasJsonBody ? JSON.stringify(body) : undefined,
     headers: hasJsonBody
       ? {
-          "Content-Type": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${getStorage("user")?.token || ""}`,
         }
       : undefined,
-    credentials: "include",
   });
 
   const raw = await response.text();
@@ -45,19 +59,4 @@ const request = async (url: string, method: string, body?: any) => {
 
   return { status: response.status, ...data };
 };
-
-const setStorage = (key: string, value: any) => {
-  localStorage.setItem(key, JSON.stringify(value));
-};
-
-const getStorage = (key: string) => {
-  const item = localStorage.getItem(key);
-  if (!item) return null;
-  try {
-    return JSON.parse(item);
-  } catch {
-    return null;
-  }
-};
-
 export { request, setStorage, getStorage };
