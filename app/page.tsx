@@ -16,7 +16,6 @@ import { PlacesView } from "@/components/views/places-view";
 import { SessionsView } from "@/components/views/sessions-view";
 import { MyCoursesView } from "@/components/views/my-courses-view";
 import { MyTeachersView } from "@/components/views/my-teachers-view";
-import { useAuth } from "@/hooks/use-auth";
 import {
   mockUsers,
   mockPersons,
@@ -28,7 +27,6 @@ import {
 import type { User, Person, Course, Place, Session } from "@/lib/types";
 
 export default function AdminPage() {
-  const { isAuthenticated, login, logout } = useAuth();
   const [activeSection, setActiveSection] = useState("dashboard");
 
   // Local state for CRUD operations
@@ -111,13 +109,9 @@ export default function AdminPage() {
   const handleLoginSuccess = (credentials: {
     email: string;
     password: string;
-  }) => {
-    login(credentials.email);
-  };
+  }) => {};
 
-  const handleLogout = () => {
-    logout();
-  };
+  const handleLogout = () => {};
 
   const renderContent = () => {
     switch (activeSection) {
@@ -210,7 +204,7 @@ export default function AdminPage() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (true) {
     return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
 
