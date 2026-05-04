@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   SidebarProvider,
   SidebarInset,
@@ -24,10 +24,14 @@ import {
   mockSessions,
   currentPersonId,
 } from "@/lib/mock-data";
+import { getStorage } from "@/lib/req";
 import type { User, Person, Course, Place, Session } from "@/lib/types";
 
 export default function AdminPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
+
+  // Auth state
+  const [userAuth, setUserAuth] = useState<any>(null);
 
   // Local state for CRUD operations
   const [users, setUsers] = useState<User[]>(mockUsers);
@@ -35,6 +39,13 @@ export default function AdminPage() {
   const [courses, setCourses] = useState<Course[]>(mockCourses);
   const [places, setPlaces] = useState<Place[]>(mockPlaces);
   const [sessions, setSessions] = useState<Session[]>(mockSessions);
+
+  useEffect(() => {
+    const savedUser = getStorage("user");
+    if (savedUser) {
+      setUserAuth(savedUser);
+    }
+  }, []);
 
   // Users CRUD
   const handleAddUser = (user: Omit<User, "id">) => {
@@ -106,12 +117,14 @@ export default function AdminPage() {
     setSessions(sessions.filter((s) => s.id !== id));
   };
 
-  const handleLoginSuccess = (credentials: {
-    email: string;
-    password: string;
-  }) => {};
+  const handleLoginSuccess = () => {
+    setUserAuth(getStorage("user"));
+  };
 
-  const handleLogout = () => {};
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUserAuth(null);
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -204,7 +217,7 @@ export default function AdminPage() {
     }
   };
 
-  if (true) {
+  if (!userAuth) {
     return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
 

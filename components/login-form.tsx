@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { login } from "@/hooks/auth";
 
-export function LoginForm() {
+export function LoginForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,8 +24,13 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    login({ username, password });
     setIsLoading(true);
+    const response = await login({ username, password });
+    setIsLoading(false);
+
+    if (response.status === 200) {
+      onLoginSuccess();
+    }
   };
 
   return (
