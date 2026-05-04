@@ -1,10 +1,11 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import type { User, Person } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, useEffect } from "react";
+import type { User, Person } from "@/lib/types";
+import { getUsersByRole } from "@/hooks/course";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -20,59 +21,88 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 
 interface UsersViewProps {
-  users: User[]
-  persons: Person[]
-  onAdd: (user: Omit<User, 'id'>) => void
-  onUpdate: (id: number, user: Partial<User>) => void
-  onDelete: (id: number) => void
+  users: User[];
+  persons: Person[];
+  onAdd: (user: Omit<User, "id">) => void;
+  onUpdate: (id: number, user: Partial<User>) => void;
+  onDelete: (id: number) => void;
 }
 
-export function UsersView({ users, persons, onAdd, onUpdate, onDelete }: UsersViewProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
+export function UsersView({
+  users,
+  persons,
+  onAdd,
+  onUpdate,
+  onDelete,
+}: UsersViewProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [roleUsers, setRoleUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (selectedRole !== "all") {
+      getUsersByRole(selectedRole).then((res) => {
+        if (res.data) {
+          const mapped: User[] = res.data.map((u) => ({
+            id: u.userId,
+            personId: u.id,
+            username: u.name,
+            password: "",
+            role: u.role,
+            image: null,
+          }));
+          setRoleUsers(mapped);
+        }
+      });
+    }
+  }, [selectedRole]);
+
+  const displayedUsers = selectedRole === "all" ? users : roleUsers;
+
   const [formData, setFormData] = useState({
     personId: 0,
-    username: '',
-    password: '',
-    role: '',
-    image: '',
-  })
+    username: "",
+    password: "",
+    role: "",
+    image: "",
+  });
 
   const handleOpenCreate = () => {
-    setEditingUser(null)
+    setEditingUser(null);
     setFormData({
       personId: 0,
-      username: '',
-      password: '',
-      role: '',
-      image: '',
-    })
-    setIsDialogOpen(true)
-  }
+      username: "",
+      password: "",
+      role: "",
+      image: "",
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleOpenEdit = (user: User) => {
-    setEditingUser(user)
+    setEditingUser(user);
     setFormData({
       personId: user.personId,
       username: user.username,
-      password: '',
-      role: user.role || '',
-      image: user.image || '',
-    })
-    setIsDialogOpen(true)
-  }
+      password: "",
+      role: user.role || "",
+      image: user.image || "",
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleSubmit = () => {
     if (editingUser) {
@@ -80,44 +110,61 @@ export function UsersView({ users, persons, onAdd, onUpdate, onDelete }: UsersVi
         ...formData,
         role: formData.role || null,
         image: formData.image || null,
-      })
+      });
     } else {
       onAdd({
         ...formData,
         role: formData.role || null,
         image: formData.image || null,
-      })
+      });
     }
-    setIsDialogOpen(false)
-  }
+    setIsDialogOpen(false);
+  };
 
   const getPersonName = (personId: number) => {
-    const person = persons.find(p => p.id === personId)
-    return person?.name || 'No asignado'
-  }
+    const person = persons.find((p) => p.id === personId);
+    return person?.name || "No asignado";
+  };
 
   const getRoleBadgeVariant = (role: string | null) => {
-    switch (role) {
-      case 'admin':
-        return 'destructive'
-      case 'tutor':
-        return 'default'
+    const r = role?.toLowerCase();
+    switch (r) {
+      case "admin":
+        return "destructive";
+      case "tutor":
+        return "default";
       default:
-        return 'secondary'
+        return "secondary";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Usuarios</h1>
-          <p className="text-muted-foreground">Gestion de credenciales y roles</p>
+          <p className="text-muted-foreground">
+            Gestion de credenciales y roles
+          </p>
         </div>
         <Button onClick={handleOpenCreate}>
           <Plus className="mr-2 size-4" />
           Nuevo Usuario
         </Button>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <Label htmlFor="role-filter">Filtrar por rol:</Label>
+        <Select value={selectedRole} onValueChange={setSelectedRole}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Seleccionar rol" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="Tutor">Tutor</SelectItem>
+            <SelectItem value="Estudiante">Estudiante</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="rounded-md border">
@@ -133,21 +180,24 @@ export function UsersView({ users, persons, onAdd, onUpdate, onDelete }: UsersVi
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.length === 0 ? (
+            {displayedUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-muted-foreground"
+                >
                   No hay usuarios registrados
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
+              displayedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.id}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{getPersonName(user.personId)}</TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(user.role)}>
-                      {user.role || 'Sin rol'}
+                      {user.role || "Sin rol"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -186,12 +236,12 @@ export function UsersView({ users, persons, onAdd, onUpdate, onDelete }: UsersVi
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingUser ? 'Editar Usuario' : 'Crear Usuario'}
+              {editingUser ? "Editar Usuario" : "Crear Usuario"}
             </DialogTitle>
             <DialogDescription>
               {editingUser
-                ? 'Modifica los datos del usuario'
-                : 'Ingresa los datos del nuevo usuario'}
+                ? "Modifica los datos del usuario"
+                : "Ingresa los datos del nuevo usuario"}
             </DialogDescription>
           </DialogHeader>
 
@@ -230,7 +280,7 @@ export function UsersView({ users, persons, onAdd, onUpdate, onDelete }: UsersVi
 
             <div className="grid gap-2">
               <Label htmlFor="password">
-                Password {editingUser && '(dejar vacio para no cambiar)'}
+                Password {editingUser && "(dejar vacio para no cambiar)"}
               </Label>
               <Input
                 id="password"
@@ -279,11 +329,11 @@ export function UsersView({ users, persons, onAdd, onUpdate, onDelete }: UsersVi
               Cancelar
             </Button>
             <Button onClick={handleSubmit}>
-              {editingUser ? 'Guardar Cambios' : 'Crear Usuario'}
+              {editingUser ? "Guardar Cambios" : "Crear Usuario"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
