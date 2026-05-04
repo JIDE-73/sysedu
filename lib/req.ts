@@ -18,17 +18,22 @@ const getStorage = (key: string) => {
 };
 
 const request = async (url: string, method: string, body?: any) => {
-  const hasJsonBody = body !== undefined && method !== "GET";
+  const token = getStorage("user")?.token;
+  const headers: Record<string, string> = {};
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (body !== undefined && method !== "GET") {
+    headers["Content-Type"] = "application/json";
+  }
 
   const response = await fetch(`${baseUrl}${url}`, {
     method,
-    body: hasJsonBody ? JSON.stringify(body) : undefined,
-    headers: hasJsonBody
-      ? {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${getStorage("user")?.token || ""}`,
-        }
-      : undefined,
+    body:
+      body !== undefined && method !== "GET" ? JSON.stringify(body) : undefined,
+    headers: Object.keys(headers).length > 0 ? headers : undefined,
   });
 
   const raw = await response.text();

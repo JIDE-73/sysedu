@@ -25,6 +25,7 @@ import {
   currentPersonId,
 } from "@/lib/mock-data";
 import { getStorage } from "@/lib/req";
+import { logout } from "@/hooks/auth";
 import type { User, Person, Course, Place, Session } from "@/lib/types";
 
 export default function AdminPage() {
@@ -121,9 +122,11 @@ export default function AdminPage() {
     setUserAuth(getStorage("user"));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUserAuth(null);
+  const handleLogout = async () => {
+    const response = await logout();
+    if (response.status === 200) {
+      setUserAuth(null);
+    }
   };
 
   const renderContent = () => {
