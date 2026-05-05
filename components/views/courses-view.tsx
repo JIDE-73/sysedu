@@ -1,10 +1,11 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import type { Course, Place, Person } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, useEffect } from "react";
+import type { Course, Place, Person } from "@/lib/types";
+import { getAllCourses, searchCourses, CourseFromAPI } from "@/hooks/course";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -20,23 +21,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+} from "@/components/ui/select";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 
 interface CoursesViewProps {
-  courses: Course[]
-  places: Place[]
-  persons: Person[]
-  onAdd: (course: Omit<Course, 'id'>) => void
-  onUpdate: (id: number, course: Partial<Course>) => void
-  onDelete: (id: number) => void
+  courses: Course[];
+  places: Place[];
+  persons: Person[];
+  onAdd: (course: Omit<Course, "id">) => void;
+  onUpdate: (id: number, course: Partial<Course>) => void;
+  onDelete: (id: number) => void;
 }
 
 export function CoursesView({
@@ -47,55 +48,94 @@ export function CoursesView({
   onUpdate,
   onDelete,
 }: CoursesViewProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [apiCourses, setApiCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchCourses = async () => {
+    setIsLoading(true);
+    try {
+      const res = searchTerm.trim()
+        ? await searchCourses(searchTerm)
+        : await getAllCourses();
+
+      if (res.data && res.data.courses) {
+        const mapped: Course[] = res.data.courses.map((c: CourseFromAPI) => ({
+          id: c.id,
+          name: c.name,
+          period: c.period,
+          place: c.place,
+          tutorId: c.tutorId,
+        }));
+        setApiCourses(mapped);
+      }
+    } catch (error) {
+      console.error("Error al obtener cursos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchCourses();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  const displayedCourses =
+    searchTerm || apiCourses.length > 0 ? apiCourses : courses;
+
   const [formData, setFormData] = useState({
-    name: '',
-    period: '',
-    placeId: 0,
+    name: "",
+    period: "",
+    place: "",
     tutorId: 0,
-  })
+  });
 
   const handleOpenCreate = () => {
-    setEditingCourse(null)
+    setEditingCourse(null);
     setFormData({
-      name: '',
-      period: '',
-      placeId: 0,
+      name: "",
+      period: "",
+      place: "",
       tutorId: 0,
-    })
-    setIsDialogOpen(true)
-  }
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleOpenEdit = (course: Course) => {
-    setEditingCourse(course)
+    setEditingCourse(course);
     setFormData({
       name: course.name,
       period: course.period,
-      placeId: course.placeId,
+      place: course.place,
       tutorId: course.tutorId,
-    })
-    setIsDialogOpen(true)
-  }
+    });
+    setIsDialogOpen(true);
+  };
 
   const handleSubmit = () => {
     if (editingCourse) {
-      onUpdate(editingCourse.id, formData)
+      onUpdate(editingCourse.id, formData);
     } else {
-      onAdd(formData)
+      onAdd(formData);
     }
-    setIsDialogOpen(false)
-  }
+    setIsDialogOpen(false);
+  };
 
   const getPlaceName = (placeId: number) => {
-    const place = places.find((p) => p.id === placeId)
-    return place?.name || 'No asignado'
-  }
+    const place = places.find((p) => p.id === placeId);
+    return place?.name || "No asignado";
+  };
 
   const getTutorName = (tutorId: number) => {
-    const tutor = persons.find((p) => p.id === tutorId)
-    return tutor?.name || 'No asignado'
-  }
+    const tutor = persons.find((p) => p.id === tutorId);
+    return tutor?.name || "No asignado";
+  };
 
   return (
     <div className="space-y-6">
@@ -110,6 +150,16 @@ export function CoursesView({
         </Button>
       </div>
 
+      <div className="relative">
+        <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+        <Input
+          placeholder="Buscar cursos por nombre..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm pl-9"
+        />
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -118,25 +168,28 @@ export function CoursesView({
               <TableHead>Nombre</TableHead>
               <TableHead>Periodo</TableHead>
               <TableHead>Lugar</TableHead>
-              <TableHead>Tutor</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {courses.length === 0 ? (
+            {displayedCourses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  No hay cursos registrados
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-muted-foreground"
+                >
+                  {isLoading
+                    ? "Cargando cursos..."
+                    : "No hay cursos registrados"}
                 </TableCell>
               </TableRow>
             ) : (
-              courses.map((course) => (
+              displayedCourses.map((course) => (
                 <TableRow key={course.id}>
                   <TableCell className="font-medium">{course.id}</TableCell>
                   <TableCell>{course.name}</TableCell>
                   <TableCell>{course.period}</TableCell>
-                  <TableCell>{getPlaceName(course.placeId)}</TableCell>
-                  <TableCell>{getTutorName(course.tutorId)}</TableCell>
+                  <TableCell>{course.place}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -166,12 +219,12 @@ export function CoursesView({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingCourse ? 'Editar Curso' : 'Crear Curso'}
+              {editingCourse ? "Editar Curso" : "Crear Curso"}
             </DialogTitle>
             <DialogDescription>
               {editingCourse
-                ? 'Modifica los datos del curso'
-                : 'Ingresa los datos del nuevo curso'}
+                ? "Modifica los datos del curso"
+                : "Ingresa los datos del nuevo curso"}
             </DialogDescription>
           </DialogHeader>
 
@@ -200,11 +253,11 @@ export function CoursesView({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="placeId">Lugar</Label>
+              <Label htmlFor="place">Lugar</Label>
               <Select
-                value={formData.placeId.toString()}
+                value={formData.place}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, placeId: parseInt(value) })
+                  setFormData({ ...formData, place: value })
                 }
               >
                 <SelectTrigger>
@@ -212,8 +265,8 @@ export function CoursesView({
                 </SelectTrigger>
                 <SelectContent>
                   {places.map((place) => (
-                    <SelectItem key={place.id} value={place.id.toString()}>
-                      {place.name} {place.busy && '(Ocupado)'}
+                    <SelectItem key={place.id} value={place.name}>
+                      {place.name} {place.busy && "(Ocupado)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -247,11 +300,11 @@ export function CoursesView({
               Cancelar
             </Button>
             <Button onClick={handleSubmit}>
-              {editingCourse ? 'Guardar Cambios' : 'Crear Curso'}
+              {editingCourse ? "Guardar Cambios" : "Crear Curso"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

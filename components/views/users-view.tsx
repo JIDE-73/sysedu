@@ -49,11 +49,11 @@ export function UsersView({
 }: UsersViewProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [selectedRole, setSelectedRole] = useState<string>("Tutor");
   const [roleUsers, setRoleUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    if (selectedRole !== "all") {
+    if (selectedRole !== "Tutor") {
       getUsersByRole(selectedRole).then((res) => {
         if (res.data) {
           const mapped: User[] = res.data.map((u) => ({
@@ -70,7 +70,7 @@ export function UsersView({
     }
   }, [selectedRole]);
 
-  const displayedUsers = selectedRole === "all" ? users : roleUsers;
+  const displayedUsers = selectedRole === "Tutor" ? users : roleUsers;
 
   const [formData, setFormData] = useState({
     personId: 0,
@@ -156,7 +156,7 @@ export function UsersView({
       <div className="flex items-center gap-4">
         <Label htmlFor="role-filter">Filtrar por rol:</Label>
         <Select value={selectedRole} onValueChange={setSelectedRole}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue placeholder="Seleccionar rol" />
           </SelectTrigger>
           <SelectContent>
@@ -303,7 +303,6 @@ export function UsersView({
                   <SelectValue placeholder="Selecciona un rol" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="tutor">Tutor</SelectItem>
                   <SelectItem value="user">User</SelectItem>
                 </SelectContent>

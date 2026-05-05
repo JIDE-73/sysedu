@@ -33,3 +33,46 @@ export const getUsersByRole = async (
   );
   return response as GetUsersByRoleResponse;
 };
+
+export interface CourseFromAPI {
+  id: number;
+  tutorId: number;
+  name: string;
+  period: string;
+  place: string;
+  date_init: string;
+  date_end: string;
+  hours_day: number;
+  total_hours: number;
+  status: string;
+}
+
+export interface GetCoursesResponse {
+  message: string;
+  data: {
+    courses: CourseFromAPI[];
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export const getAllCourses = async (
+  page: number = 1,
+): Promise<GetCoursesResponse> => {
+  const response = await request(`/courses/get-all?page=${page}`, "GET");
+  return response as GetCoursesResponse;
+};
+
+export const searchCourses = async (
+  search: string,
+  page: number = 1,
+): Promise<GetCoursesResponse> => {
+  const response = await request(
+    `/courses/search/${search}?page=${page}`,
+    "GET",
+  );
+  return response as GetCoursesResponse;
+};
