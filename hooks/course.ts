@@ -76,3 +76,33 @@ export const searchCourses = async (
   );
   return response as GetCoursesResponse;
 };
+
+export interface CourseWithTutor extends CourseFromAPI {
+  tutor: UserByRole;
+}
+
+export interface GetMyCoursesResponse {
+  message: string;
+  data: CourseWithTutor[];
+  pagination: {
+    page: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export const getMyCourses = async (
+  page: number = 1,
+): Promise<GetMyCoursesResponse> => {
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const personId = user?.usuario?.id;
+
+  const response = await request(
+    `/users/get-my-courses/${personId}?page=${page}`,
+    "GET",
+  );
+  return response as GetMyCoursesResponse;
+};
