@@ -50,26 +50,26 @@ const adminMenuItems = [
     icon: Users,
     value: "users",
   },
-  {
-    title: "Personas",
-    icon: UserCircle,
-    value: "persons",
-  },
+  // {
+  //   title: "Personas",
+  //   icon: UserCircle,
+  //   value: "persons",
+  // },
   {
     title: "Cursos",
     icon: BookOpen,
     value: "courses",
   },
-  {
-    title: "Lugares",
-    icon: MapPin,
-    value: "places",
-  },
-  {
-    title: "Sesiones",
-    icon: Calendar,
-    value: "sessions",
-  },
+  // {
+  //   title: "Lugares",
+  //   icon: MapPin,
+  //   value: "places",
+  // },
+  // {
+  //   title: "Sesiones",
+  //   icon: Calendar,
+  //   value: "sessions",
+  // },
 ];
 
 interface AdminSidebarProps {

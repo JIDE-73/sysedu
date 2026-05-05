@@ -160,7 +160,6 @@ export function UsersView({
             <SelectValue placeholder="Seleccionar rol" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="Tutor">Tutor</SelectItem>
             <SelectItem value="Estudiante">Estudiante</SelectItem>
           </SelectContent>
